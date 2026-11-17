@@ -1,12 +1,14 @@
-class Karakter:
+import random
+
+class Karakter: #superklasse for alle personer i kafeen
     def __init__(self, navn):
-        self.navn = navn
+        self.__navn = navn #privat attributt
 
     def hent_navn(self):
-        return self.navn
+        return self.__navn 
 
 
-class Spiller(Karakter):
+class Spiller(Karakter): 
     def __init__(self, navn):
         super().__init__(navn)
         self.liv = 3
