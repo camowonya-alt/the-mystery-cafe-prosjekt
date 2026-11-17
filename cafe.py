@@ -73,7 +73,7 @@ def spill_quiz(spiller, sporsmal):
 
 
 def start_spill():
-    print("☕ Welcome to The Mystery Café! ☕")
+    print("Welcome to The Mystery Café! ☕")
     spiller = Spiller(input("Enter your name: "))
 
     sporsmal_liste = [
@@ -95,5 +95,5 @@ def start_spill():
     print("Total stars:", spiller.stjerner, "⭐")
     print("Final level:", spiller.niva)
 
-
-start_spill()
+if __name__ == "__main__":
+    start_spill() #hindrer at spillet startr når en annen fil henter noe fra det (test.py)
