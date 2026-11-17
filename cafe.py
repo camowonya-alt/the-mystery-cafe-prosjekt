@@ -8,24 +8,49 @@ class Karakter: #superklasse for alle personer i kafeen
         return self.__navn 
 
 
-class Spiller(Karakter): 
+class Ansatt(Karakter): #spilleren, arver fra Karakter klassen
+    poeng_per_niva = 20 #hvor mange poeng som trengs for å gå opp ett nivå
+    
     def __init__(self, navn):
         super().__init__(navn)
-        self.liv = 3
-        self.poeng = 0
-        self.stjerner = 0
-        self.niva = 1
+        self.__liv = 3
+        self.__poeng = 0
+        self.__stjerner = 0
+        self.__niva = 1
+
+    #get metoder
+    def hent_liv(self):
+        return self.__liv
+
+    def hent_poeng(self):
+        return self.__poeng
+
+    def hent_stjerner(self):
+        return self.__stjerner
+
+    def hent_niva(self):
+        return self.__niva
+
 
     def legg_til_poeng(self, mengde):
-        self.poeng += mengde
+        self.__poeng += mengde
 
+    def legg_til_stjerne(self):
+        self.__stjerner += 1
+        
     def mist_liv(self):
-        self.liv -= 1
+        self.__liv -= 1
 
-    def ga_opp_i_niva(self):
-        if self.poeng >= 50:
-            self.niva += 1
-            self.poeng -= 50
+    def ga_opp_i_niva(self): #går opp ett nivå hvis nok poeng, retunerer true hvis nivået økte
+        if self.__poeng >= self.poeng_per_niva:
+            self.__niva += 1
+            self.__poeng -= self.poeng_per_niva
+            return True
+        return False
+
+    def server(self, kunde): #serverer opskriften kunden har valgt lol
+        oppskrift = kunde.hent_valg()
+        print(f"{self.hent_navn()} serves {oppskrift.hent_navn()} to {kunde.hent_navn()}.")
 
 
 class Sporsmal:
