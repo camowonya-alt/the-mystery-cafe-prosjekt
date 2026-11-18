@@ -1,5 +1,3 @@
-import random
-
 class Karakter: #superklasse for alle personer i kafeen
     def __init__(self, navn):
         self.__navn = navn #privat attributt
@@ -8,8 +6,7 @@ class Karakter: #superklasse for alle personer i kafeen
         return self.__navn 
 
 
-class Ansatt(Karakter): #spilleren, arver fra Karakter klassen
-    poeng_per_niva = 20 #hvor mange poeng som trengs for å gå opp ett nivå
+class Kunde(Karakter): #spilleren, arver fra Karakter klassen
     
     def __init__(self, navn):
         super().__init__(navn)
@@ -17,6 +14,7 @@ class Ansatt(Karakter): #spilleren, arver fra Karakter klassen
         self.__poeng = 0
         self.__stjerner = 0
         self.__niva = 1
+        self.__valgt_oppskrift = None
 
     #get metoder
     def hent_liv(self):
@@ -31,6 +29,11 @@ class Ansatt(Karakter): #spilleren, arver fra Karakter klassen
     def hent_niva(self):
         return self.__niva
 
+    def hent_valg(self):
+        return self.__valgt_oppskrift
+
+    def velg_oppskrift(self, oppskrift):
+        self.__valgt_oppskrift = oppskrift
 
     def legg_til_poeng(self, mengde):
         self.__poeng += mengde
@@ -41,99 +44,138 @@ class Ansatt(Karakter): #spilleren, arver fra Karakter klassen
     def mist_liv(self):
         self.__liv -= 1
 
-    def ga_opp_i_niva(self): #går opp ett nivå hvis nok poeng, retunerer true hvis nivået økte
-        if self.__poeng >= self.poeng_per_niva:
+    def er_i_live(self):
+        return self.__liv > 0
+
+    def ga_opp_i_niva(self): #går opp ett nivå hvis nok poeng
+        if self.__poeng >= self.__niva * 20:
             self.__niva += 1
-            self.__poeng -= self.poeng_per_niva
-            return True
-        return False
 
-    def server(self, kunde): #serverer opskriften kunden har valgt lol
-        oppskrift = kunde.hent_valg()
-        print(f"{self.hent_navn()} serves {oppskrift.hent_navn()} to {kunde.hent_navn()}.")
+class Ansatt(Karakter): #jobber i kafeen. arver fra karakter
 
-
-class Kunde(Karakter): #en kunde i kafee. arver fra Karakter og kan kun velge en oppskrift
-
-    def __init__(self, navn):
+    def __init__(self, navn, oppskrifter):
         super().__init__(navn)
-        self.__valgt_oppskrift = None 
+        self.__oppskrifter = oppskrifter
 
-    def velg_oppskrift(self, oppskrift):
-        self.__valgt_oppskrift = oppskrift
+    def hent_oppskrifter(self):
+        return self.__oppskrifter
 
-    def hent_valg(self):
-        return self.__valgt_oppskrift
+    def server(self, kunde):
+        oppskrift = kunde.hent_valg()
+        print (f"{self.hent_navn()} serves {oppskrift.hent_navn()} to {kunde.hent_navn()}.")
 
 
-class Sporsmal:
+class Sporsmal: #en quiz med et riktig svar
     def __init__(self, sporsmalstekst, riktig_svar):
-        self.sporsmalstekst = sporsmalstekst
-        self.riktig_svar = riktig_svar
+        self.__sporsmalstekst = sporsmalstekst
+        self.__riktig_svar = riktig_svar
 
-    def sjekk_svar(self, svar):
-        return svar.lower() == self.riktig_svar.lower()
+    def hent_tekst(self):
+        return self.__sporsmalstekst
+
+    def sjekk_svar(self, svar): #dette ignorerer store og små bojstaver og mellomrom rundt svaret
+        return svar.strip().lower() == self.__riktig_svar.lower()
 
 
-class Oppskrift:
+class Oppskrift: #en oppskrift, er låst til kunden har høyt nok nivå
     def __init__(self, navn, krevd_niva):
-        self.navn = navn
-        self.krevd_niva = krevd_niva
-        self.last = False
+        self.__navn = navn
+        self.__krevd_niva = krevd_niva
+        self.__last = True #betyr at oppskriften er låst
 
-    def las_opp(self, spiller):
-        if spiller.niva >= self.krevd_niva:
-            self.last = True
+    def hent_navn(self):
+        return self.__navn
+
+    def er_last(self):
+        return self.__last
+
+    def las_opp(self, kunde): 
+        if kunde.hent_niva() >= self.__krevd_niva:
+            self.__last = False
 
 
-def spill_quiz(spiller, sporsmal):
-    print("\n" + sporsmal.sporsmalstekst)
-    svar = input("Your answer: ")
+class Kafe: #styrer spillet har en ansatt, kunden er spilleren
+    def __init__(self, kunde):
+        self.__kunde = kunde
 
-    if sporsmal.sjekk_svar(svar):
-        print("Correct! +10 points! ⭐")
-        spiller.legg_til_poeng(10)
-        spiller.stjerner += 1
-    else:
-        print("Wrong answer! You lost one life.")
-        spiller.mist_liv()
+        self.__oppskrifter = [
+           Oppskrift("Latte", 1),
+           Oppskrift("Croissant", 2),
+           Oppskrift("Cheesekake", 3)
+        ]
+        self.__ansatt = Ansatt("Sam", self.__oppskrifter)
 
-    spiller.ga_opp_i_niva()
+        self.__spormsal_liste = [
+            Sporsmal("What is the main ingredient in bread?", "flour"),
+            Sporsmal("What drink is made with espresso and steamed milk?", "latte"),
+            Sporsmal("What ingredient makes cakes rise?", "baking powder"),
+            Sporsmal("What is the main ingredient in cheesecake?", "cream cheese"),
+            Sporsmal("Which country is famous for croissants?", "france"),
+            Sporsmal("What do you call coffee with chocolate and milk?", "mocha"),
+            Sporsmal("What sweet ingredient is made by bees?", "honey")
+        ]
+        self.sjekk_lasopp()
 
-    print("Points:", spiller.poeng)
-    print("Lives:", spiller.liv)
-    print("Stars:", spiller.stjerner, "⭐")
-    print("Level:", spiller.niva)
+    def sjekk_lasopp(self): #låser opp oppskrifter som kunden har høyt nok nivå til
+        for oppskrift in self.__oppskrifter:
+            if oppskrift.er_last():
+                oppskrift.las_opp(self.__kunde)
+                if not oppskrift.er_last():
+                    print(f"New recipe unlocked: {oppskrift.hent_navn()}!!!")
 
-    if spiller.liv == 0:
-        print("GAME OVER!")
-        return False
+    def gi_oppskrift(self): #kunden får ny låst opp oppskrift
+        nyeste = None
+        for oppskrift in self.__oppskrifter:
+            if not oppskrift.er_last():
+                nyeste = oppskrift
+        self.__kunde.velg_oppskrift(nyeste)
 
-    return True
+
+    def still_sporsmal(self, sporsmal):
+        oppskrift = self.__kunde.hent_valg()
+        print(f"\nAnswer to get your {oppskrift.hent_navn()}!!")
+        print(sporsmal.hent_tekst())
+        svar = input ("Your answer: ")
+
+        if sporsmal.sjekk_svar(svar):
+            print("Correct! +10 points! ⭐")
+            self.__ansatt.server(self.__kunde)
+            self.__kunde.legg_til_poeng(10)
+            self.__kunde.legg_til_stjerne()
+            self.__kunde.ga_opp_i_niva()
+            self.sjekk_lasopp()
+        else:
+            print("Wrong answer! You lost one life.")
+            self.__kunde.mist_liv()
+
+
+    def vis_status(self):
+        print("Points:", self.__kunde.hent_poeng())
+        print("Lives:", self.__kunde.hent_liv())
+        print("Stars:", self.__kunde.hent_stjerner(), "⭐")
+        print("Level:", self.__kunde.hent_niva())
+
+    def start(self):
+        for sporsmal in self.__spormsal_liste:
+            self.gi_oppskrift()
+            self.still_sporsmal(sporsmal)
+            self.vis_status()
+            if not self.__kunde.er_i_live():
+                print ("GAME OVER!")
+                break
+        self.avslutt()
+
+    def avslutt(self):
+        print("\nThanks for playing The Mystery Cafe!")
+        print("Final points:", self.__kunde.hent_poeng())
+        print("Total stars:", self.__kunde.hent_niva(), "⭐")
 
 
 def start_spill():
     print("Welcome to The Mystery Café! ☕")
-    spiller = Spiller(input("Enter your name: "))
-
-    sporsmal_liste = [
-        Sporsmal("What is the main ingredient in bread?", "flour"),
-        Sporsmal("What drink is made with espresso and steamed milk?", "latte"),
-        Sporsmal("What ingredient makes cakes rise?", "baking powder"),
-        Sporsmal("What is the main ingredient in cheesecake?", "cream cheese"),
-        Sporsmal("Which country is famous for croissants?", "france"),
-        Sporsmal("What do you call coffee with chocolate and milk?", "mocha"),
-        Sporsmal("What sweet ingredient is made by bees?", "honey")
-    ]
-
-    for sporsmal in sporsmal_liste:
-        if not spill_quiz(spiller, sporsmal):
-            break
-
-    print("\nThanks for playing The Mystery Café!")
-    print("Final points:", spiller.poeng)
-    print("Total stars:", spiller.stjerner, "⭐")
-    print("Final level:", spiller.niva)
+    kunde = Kunde(input("Enter your name: "))
+    kafe = Kafe(kunde)
+    kafe.start()
 
 if __name__ == "__main__":
     start_spill() #hindrer at spillet startr når en annen fil henter noe fra det (test.py)
