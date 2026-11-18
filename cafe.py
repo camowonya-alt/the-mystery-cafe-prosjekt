@@ -53,6 +53,19 @@ class Ansatt(Karakter): #spilleren, arver fra Karakter klassen
         print(f"{self.hent_navn()} serves {oppskrift.hent_navn()} to {kunde.hent_navn()}.")
 
 
+class Kunde(Karakter): #en kunde i kafee. arver fra Karakter og kan kun velge en oppskrift
+
+    def __init__(self, navn):
+        super().__init__(navn)
+        self.__valgt_oppskrift = None 
+
+    def velg_oppskrift(self, oppskrift):
+        self.__valgt_oppskrift = oppskrift
+
+    def hent_valg(self):
+        return self.__valgt_oppskrift
+
+
 class Sporsmal:
     def __init__(self, sporsmalstekst, riktig_svar):
         self.sporsmalstekst = sporsmalstekst
